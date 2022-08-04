@@ -5,6 +5,8 @@ import numpy as np
 
 from glob import glob
 
+from calc_func import *
+
 pd.set_option("display.max_columns", None)
 
 
@@ -20,6 +22,8 @@ def split_data(input_x, option=0):
     
     except (ValueError, IndexError):
         return np.nan
+    
+
 # %%
 DATAPATH = "../../../dataset/raw_data"
 DATAPATH2 = "../../../dataset/request"
@@ -103,4 +107,33 @@ df_dataset = df_dataset.rename(
     }
 )
 # %%
+df_dataset = is_MVPA(df_dataset)
+df_dataset = have_disease(df_dataset)
+
+
+df_dataset = df_dataset.assign(
+    ## Sex
+    sex = lambda x: np.where(x['GEND_CD'] == "M", 1, 0),
+    ## max SBP during Exercise
+    max_sbp = lambda x: x[
+        ["SM3641", "SM3642", "SM3643", "SM3644", "SM3645", 'SM3646', 'SM3647']
+    ].max(axis=1),
+    ## RER
+    rer = lambda x: x[
+        ["SM3691", "SM3692", "SM3693", "SM3694", "SM3695", 'SM3696', 'SM3697']
+    ].max(axis=1),
+    ## max_HR
+    max_hr = lambda x: x[
+        ["SM3631", "SM3632", "SM3633", "SM3634", "SM3635", "SM3636", "SM3637"]
+    ].max(axis=1),
+    ## CRF
+    crf = lambda x: x['SM3720'],
+    ## VO2max
+    vo2max = lambda x: x['SM3720'] * 3.5,
+    ## ECP
+    ecp = lambda x: x["vo2max"] / x["max_sbp"] * x['SM0102'],
+)
+
+# %%
 df_dataset.to_csv("../../data/fitness_data.csv", index=False, encoding="utf-8")
+# %%
