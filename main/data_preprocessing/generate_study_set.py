@@ -42,7 +42,7 @@ columns_to_rename = {
 
 # %%
 df_study_set = df_orig.query(
-    "(rer >= 1.1) & (Stroke != 1) & (Angina !=1) & (MI !=1) & (Cancer != 1) & (Hepatatis != 1) & (cac_score.notnull() | carotid.notnull() | baPWV.notnull())", 
+    "(rer >= 1.1) & (crf.notnull()) & (Stroke != 1) & (Angina !=1) & (MI !=1) & (Cancer != 1) & (Hepatatis != 1) & (cac_score.notnull() | carotid.notnull() | baPWV.notnull())", 
     engine='python'
 )[FEATURES].rename(columns=columns_to_rename).groupby(["HPCID"]).head(1).reset_index(drop=True)
 
@@ -59,6 +59,8 @@ def _make_age_adjusted_value(dataframe):
     
     dataframe = dataframe.assign(
         ecp_quantile = pd.qcut(dataframe['ecp'], q=4, labels=[0, 1, 2, 3]),
+        max_sbp_binary = np.where(dataframe['max_sbp'] >= 210, 1, 0),
+        crf_quantile = pd.qcut(dataframe['crf'], q=4, labels=[0, 1, 2, 3]),
         carotid_cut = np.where(dataframe['carotid'] > dataframe['carotid'].quantile(0.75), 1, 0),
         baPWV_cut = np.where(dataframe['baPWV'] > dataframe['baPWV'].quantile(0.75), 1, 0),
         cac_score_cut_0 = np.where(dataframe['cac_score'] > 0, 1, 0),
@@ -100,3 +102,4 @@ df_study_set = get_age_adjusted_quantile(df_study_set)
 df_study_set = df_study_set.query("(baPWV != 6344.500000) & ~(rest_hr > 600) & ~(max_hr > 600) & ~(max_sbp > 300) & ~(crf > 30) & ~(carotid > 30)")
 # %%
 df_study_set.to_csv("../../data/study_set.csv", index=False)
+# %%
